@@ -9,12 +9,11 @@ class BingoSheet:
     """contains 5x5 matrix of Bingo guesses"""
 
     def __init__(self, raw_string:str):
-        # self.values = [[]]*5 # TODO: is this even needed?
         self.match_count = {'row': [0]*5, 'col': [0]*5}
         self.sum_of_unmatched = 0
         """total sum of all values in the BingoSheet, decreased each time a new matching value is called"""
 
-        self.values = [[int(value) for value in line.split()] for line in raw_string.splitlines()] # = [[]]*5 = [[],[],[],[],[]] (aber gefüllt)
+        self.values = [[int(value) for value in line.split()] for line in raw_string.splitlines()] # form of values = [[]]*5 = [[],[],[],[],[]]
         for row in self.values:
             for value in row:
                 self.sum_of_unmatched += value
