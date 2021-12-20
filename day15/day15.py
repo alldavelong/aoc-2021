@@ -5,19 +5,19 @@ file = open('input.txt')
 GRID = [[int(x) for x in y] for y in file.read().splitlines()]
 file.close()
 
-import sys
-sys.setrecursionlimit(1020)
-# input size of 100*100 numbers. times 5 to the side and down makes 10000*25 = 250000 positions to check.
-# 'maximum recursion depth exceeded' when already tracking the path in the end.
+import math
 
 class GridNode:
     def __init__(self, risk:int, coords:tuple) -> None:
         self.risk = risk
         self.coords = coords
-        self.distance = 987654321
+        self.distance = math.inf
         self.neighbours = []
         self.visited = False
         self.previous = None
+
+    def __lt__(self, other):
+        return self.distance < other.distance
     
     def add_neighbours(self, neighbours):
         for neighbour in neighbours:
@@ -43,13 +43,6 @@ class GridNode:
                 node_list.append(grid_nodes[y][x])
         return node_list
 
-def get_closest_from_queue(queue) -> GridNode:
-    next = 0
-    for gn in range(len(queue)):
-        if queue[gn].distance < queue[next].distance:
-            next = gn
-    return queue.pop(next)
-
 def dijkstra(nodes:list[GridNode]):
     nodes[0].distance = 0
     queue = [nodes[0]]
@@ -57,8 +50,8 @@ def dijkstra(nodes:list[GridNode]):
     total_positions = len(nodes)
     while len(queue):
         count += 1
-        if count % 1000 == 0: print('checked %d%% (%d of %d)' % (count/total_positions*100, count, total_positions))
-        current = get_closest_from_queue(queue)
+        if count % 1000 == 0: print('checked %d%% (%d of %d)' % (count/total_positions*100, count, total_positions), end='\r')
+        current = queue.pop(0)
         for neighbour in current.neighbours:
             if neighbour.visited:
                 continue
@@ -68,27 +61,15 @@ def dijkstra(nodes:list[GridNode]):
                 neighbour.previous = current
                 if neighbour not in queue:
                     queue.append(neighbour)
+                    # queue.sort(key=lambda x: x.distance) # this is much faster than queue.sort(), but less pretty
+                    queue.sort() # uses __lt__() of the object
         current.visited = True
-
-def find_shortest_path(node, path): # path muss am anfang das ziel schon enthalten
-    if node.previous != None:
-        path.append(node.previous)
-        find_shortest_path(node.previous, path)
-    return
-
-def get_path_risk(path:list[GridNode]):
-    risk_sum = 0
-    for node in path:
-        # print(node.risk)
-        risk_sum += node.risk
-    return risk_sum-path[len(path)-1].risk
+    print('\nDijkstra finished')
 
 def part1():
     node_list = GridNode.init_node_list_from_grid(GRID)
     dijkstra(node_list)
-    path = [node_list[len(node_list)-1]]
-    find_shortest_path(path[0], path)
-    print('path risk: %d' % get_path_risk(path))
+    print('path risk: %d' % node_list[-1:][0].distance)
 
 def make_increased_grid_copy(grid:list[list], increment=1) -> list[list]:
     increased_grid = [line.copy() for line in grid]
@@ -117,9 +98,7 @@ def part2():
 
     node_list = GridNode.init_node_list_from_grid(bigger_grid)
     dijkstra(node_list)
-    path = [node_list[len(node_list)-1]]
-    find_shortest_path(path[0], path)
-    print('path risk: %d' % get_path_risk(path))
+    print('path risk: %d' % node_list[-1:][0].distance)
 
 part1()
 part2()
